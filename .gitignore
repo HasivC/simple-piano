@@ -1,0 +1,17 @@
+# 构建产物
+.build/
+dist/
+.android-sdk/
+piano-standalone.html
+
+# 签名密钥（首次构建会自动重新生成）
+keystore/
+
+# 系统
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 编辑器
+.vscode/
+.idea/

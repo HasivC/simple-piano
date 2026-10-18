@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050a18">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PIANO">
+<meta name="description" content="星空发光琴键的移动端弹琴应用：3×5 / 3×7 矩形键位、14 种音色、多页扩展音域、支持多点触控与刮奏。">
+<title>PIANO</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div>
+<div class="stars" aria-hidden="true"></div>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="spark">✦</span>PIANO</div>
+    <button id="presetChip" class="chip" title="切换音色">大钢琴</button>
+    <div class="grow"></div>
+    <button id="btnRec" class="iconbtn rec" aria-label="开始录音">●</button>
+    <button id="btnPlay" class="iconbtn" aria-label="播放录音" style="display:none">▶</button>
+    <button id="btnSettings" class="iconbtn" aria-label="设置">⚙</button>
+  </header>
+
+  <main class="stage">
+    <div class="board" id="board"></div>
+  </main>
+
+  <footer class="bottombar">
+    <button id="btnSustain" class="pill">延音</button>
+    <button id="btnPrev" class="navbtn" aria-label="上一页">‹</button>
+    <div class="dots" id="dots"></div>
+    <button id="btnNext" class="navbtn" aria-label="下一页">›</button>
+    <button id="btnNames" class="pill">音名</button>
+  </footer>
+
+  <div class="hint" id="hint">
+    轻触琴键开始演奏 · 手指滑过可刮奏 · 多指按住可弹和弦 · 左右滑动翻页
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+
+<section class="sheet" id="sheet" aria-label="设置面板">
+  <div class="handle"></div>
+  <nav class="tabs">
+    <button data-tab="timbre" class="active">音色</button>
+    <button data-tab="layout">音阶布局</button>
+    <button data-tab="play">演奏</button>
+    <button data-tab="rec">录音</button>
+  </nav>
+
+  <div class="panes">
+
+    <div class="pane active" data-pane="timbre">
+      <p class="note">共 14 种音色，点击即可试听。演奏中也能随时切换。</p>
+      <div class="preset-grid" id="presetGrid"></div>
+    </div>
+
+    <div class="pane" data-pane="layout">
+      <div class="field">
+        <label>键位布局</label>
+        <div class="choices" id="optCols">
+          <button data-v="5" class="active">3 × 5（15 键）</button>
+          <button data-v="7">3 × 7（21 键）</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>音阶</label>
+        <div class="choices" id="optScale">
+          <button data-v="major" class="active">自然大调</button>
+          <button data-v="minor">自然小调</button>
+          <button data-v="penta">五声音阶</button>
+          <button data-v="chromatic">半音阶</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>起始八度</label>
+        <div class="choices" id="optOct">
+          <button data-v="1">C1</button>
+          <button data-v="2">C2</button>
+          <button data-v="3" class="active">C3</button>
+          <button data-v="4">C4</button>
+          <button data-v="5">C5</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>页数（音域宽度）</label>
+        <div class="choices" id="optPages">
+          <button data-v="1">1 页</button>
+          <button data-v="2">2 页</button>
+          <button data-v="3" class="active">3 页</button>
+          <button data-v="4">4 页</button>
+        </div>
+      </div>
+      <p class="note">当前音域：<b id="rangeHint">C3 – C5</b><br>
+        每页整体升高一个八度（相邻页自然重叠），所以每页形状一致、都从主音开始。
+        3×5 + 4 页刚好覆盖完整钢琴音域 C1–C8。<br>
+        翻页：左右滑动屏幕，或按键盘 <b>← →</b> / <b>, .</b>，也可点下方页点。</p>
+    </div>
+
+    <div class="pane" data-pane="play">
+      <div class="field">
+        <label>开关</label>
+        <div class="choices wraps">
+          <button id="optSustain" class="toggle">延音踏板</button>
+          <button id="optVelocity" class="toggle">按压力度</button>
+          <button id="optNames" class="toggle">显示音名</button>
+          <button id="optHighlight" class="toggle active">高亮主音 C</button>
+          <button id="optVibrate" class="toggle active">触感振动</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>主音量 <span class="val">80%</span></label>
+        <input type="range" id="optVolume" min="0" max="1" step="0.01" value="0.8">
+      </div>
+      <div class="field">
+        <label>混响 <span class="val">100%</span></label>
+        <input type="range" id="optReverb" min="0" max="1.5" step="0.01" value="1">
+      </div>
+      <p class="note">「按压力度」开启后，手指按在琴键下半部分会更响；关闭时每一个音都等强。<br>电脑键盘也能弹：<b>Z X C V B N M</b> / <b>A S D F G H J</b> / <b>Q W E R T Y U</b> 对应三行琴键。</p>
+    </div>
+
+    <div class="pane" data-pane="rec">
+      <div class="field">
+        <label>录音与回放</label>
+        <div class="choices wraps">
+          <button id="recToggle" class="toggle wide">● 开始录音</button>
+          <button id="recPlay" class="toggle">▶ 播放</button>
+          <button id="recLoop" class="toggle">⟲ 循环</button>
+          <button id="recClear" class="toggle">🗑 清空</button>
+        </div>
+      </div>
+      <p class="note" id="recInfo">还没有录音。点击「开始录音」，然后尽情弹奏。</p>
+      <p class="note">录音保存在本机浏览器中，回放时会按原音色重放。</p>
+    </div>
+
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script src="audio.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
